@@ -28,9 +28,9 @@
                 android:id="@+id/etext"
                 android:layout_width="fill_parent"
                 android:layout_height="match_parent"
+                android:text="Want to look for a Movie?"
                 android:singleLine="true"
-                android:text="Wanna find a movie's plot?"
-                android:onClick="svuotaedit"
+                android:onClick="clearEditText"
                 android:layout_gravity="center"
                 android:imeOptions="actionSearch"
                 />
@@ -45,7 +45,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="cerca"
+            android:onClick="searchGo"
             android:paddingTop="20dp"
             android:src="@drawable/bottone"/>
     </LinearLayout>

@@ -1,22 +1,16 @@
 package com.example.bacci.movieplots;
 
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -34,56 +28,56 @@ public class ScrollingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scrolling);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        aggiorna(); //durante il caricamento della view aggiorno i dati
+        update(); //While the view is loading I update the data
     }
 
-    public String cerca_informazioni() {
-        String nomefilm = getIntent().getStringExtra("film"); //ottengo l'intent dall'altra activity con l'indirizzo del json per i dati del film
+    public String lookForInformations() {
+        String filmName = getIntent().getStringExtra("film"); //with the intent from the previous view I create the URL.
 
-        String conn = "http://www.omdbapi.com/?t=" + nomefilm + "&y=&plot=short&r=json";
-        return conn; //l'URL finale da utilizzare
+        String connection = "http://www.omdbapi.com/?t=" + filmName + "&y=&plot=short&r=json";
+        return connection; //final URL
     }
 
-    public void aggiorna() { // creo la funzione che poi mi faraà il parsing e che a sua volta chiamerà la funzione per scaricare l'immagine
-        RicercaCampo client = new RicercaCampo();
-        client.execute(cerca_informazioni()); //chiamo cercainformazioni che quindi fornirà l'URL per la ricerca
+    public void update() {
+        searchFields client = new searchFields(); //Calling for the parsing
+        client.execute(lookForInformations()); //execute
 
     }
 
-    public class RicercaCampo extends AsyncTask<String, Void, String[]> {
+    public class searchFields extends AsyncTask<String, Void, String[]> {
 
         @Override
         protected String[] doInBackground(String... params) {
-            // dichiarazione delle var/obj che mi serviranno
-            final String[] informazioni = {"Genre", "Year", "Director", "Metascore", "Plot", "Poster"}; //inserisco in un array di stringhe i valori da cercare
-            final String[] inforitorno = new String[6];//creo preventivamente l'array dei valori da restituire
+            //var and objects that I will need
+            final String[] information = {"Genre", "Year", "Director", "Metascore", "Plot", "Poster"}; //values to look for
+            final String[] results = new String[6];//array to return
             URL url;
             HttpURLConnection urlConnection = null;
             String responseString;
-            // definizione di una costante
+            //Costant
             try {
-                // leggo i dati di risposta del web service nella pagina internet
+                //get the data from the json
                 url = new URL(params[0]);
                 urlConnection = (HttpURLConnection) url.openConnection();
                 responseString = readStream(urlConnection.getInputStream());
-                // fine della lettura, i dati stanno nella variabile responseString
+                //data stored in response String
 
-                //Trasformo la stringa in un oggetto di tipo JSON
+                //String into jason object
                 JSONObject jsonObj = new JSONObject(responseString);
-                String controllo = jsonObj.getString("Response");
-                // ottengo una stringa per poi controllare se il film effettivamente esiste
-                if (controllo.equals("False")) { //dal momento che se il film non esiste il json mi restituisce una stringa "Response" = "False" io la controllo
-                    for (int i = 0; i < inforitorno.length; i++) {
+                String control = jsonObj.getString("Response");
+                //check if the movie exist
+                if (control.equals("False")) { //if the movie doesn't exist the json will give "Response=false"
+                    for (int i = 0; i < results.length; i++) {
                         if( i== 0 )
-                        inforitorno[i] = "Sorry, try with another film."; // se quindi non esiste sostituisco gli antiestetici "null" con delle frasi comprensibile dall'utenza
+                        results[i] = "Sorry, try with another film.";
                         else
-                            inforitorno[i] = "Movie Not Found!";
+                            results[i] = "Movie Not Found!";
                     }
                 } else {
-                    for (int i = 0; i < informazioni.length; i++) { //se il film esiste quindi carico il mio array(inforitorno) con le stringje uttenute compreso l'indirizzo per scaricare l'immagine
-                        String campoattuale = informazioni[i];
-                        String film = jsonObj.getString(campoattuale);
-                        inforitorno[i] = film; //carico l'array inforitorno
+                    for (int i = 0; i < information.length; i++) { //If the movie exist I will fill the array with the values and get the link for the poster
+                        String actualField = information[i];
+                        String film = jsonObj.getString(actualField);
+                        results[i] = film; //load the results array
                     }
                 }
             } catch (Exception e) {
@@ -92,41 +86,41 @@ public class ScrollingActivity extends AppCompatActivity {
                 if (urlConnection != null)
                     urlConnection.disconnect();
             }
-            return inforitorno;
+            return results;
 
         }
 
-        protected void onPostExecute(String[] inforitorno) {
-            String titolofilm = getIntent().getStringExtra("titolo"); //Inserisco il titolo
-            TextView txttitolo = (TextView) findViewById(R.id.title);
-            txttitolo.setText("Title: " + titolofilm);
-         // con l'array inforitorno riempito e il titolo passatomi dall'altra activity carico quindi le textbox e scarico l'immagine da il link ottenuto
-            for (int i = 0; i < inforitorno.length; i++) {
+        protected void onPostExecute(String[] resultsInfo) {
+            String movieTitle = getIntent().getStringExtra("title"); //Show the title
+            TextView textTitle = (TextView) findViewById(R.id.title);
+            textTitle.setText("Title: " + movieTitle);
+         // with the results in my array I can now show them to the user
+            for (int i = 0; i < resultsInfo.length; i++) {
                 if (i == 0) {
                     TextView txtgenere = (TextView) findViewById(R.id.Genre);
-                    txtgenere.setText("Genre: " + inforitorno[i]);
+                    txtgenere.setText("Genre: " + resultsInfo[i]);
                 } else if (i == 1) {
                     TextView txtgenere = (TextView) findViewById(R.id.Year);
-                    txtgenere.setText("Year: " + inforitorno[i]);
+                    txtgenere.setText("Year: " + resultsInfo[i]);
                 } else if (i == 2) {
                     TextView txtgenere = (TextView) findViewById(R.id.Director);
-                    txtgenere.setText("Director: " + inforitorno[i]);
+                    txtgenere.setText("Director: " + resultsInfo[i]);
                 } else if (i == 3) {
                     TextView txtgenere = (TextView) findViewById(R.id.Metascore);
-                    txtgenere.setText("Metascore: " + inforitorno[i]);
+                    txtgenere.setText("Metascore: " + resultsInfo[i]);
                 } else if (i == 4) {
                     TextView txtgenere = (TextView) findViewById(R.id.Plot);
-                    txtgenere.setText("Plot: " + inforitorno[i]);
+                    txtgenere.setText("Plot: " + resultsInfo[i]);
                 }
                 else
                 {
                     ImageDownloader id = new ImageDownloader();
-                    id.execute(inforitorno[i]); //chiamo la funzione che scarica l'immagine
+                    id.execute(resultsInfo[i]); //method to download the image
                 }
             }
         }
 
-        private String readStream(InputStream in) { // readstream dei pdf
+        private String readStream(InputStream in) { // readstream
             BufferedReader reader = null;
             StringBuffer response = new StringBuffer();
             try {
@@ -150,10 +144,10 @@ public class ScrollingActivity extends AppCompatActivity {
         }
     }
 
-    private class ImageDownloader extends AsyncTask<String, Integer, Bitmap> { //asynctask per il download dell'immagine
+    private class ImageDownloader extends AsyncTask<String, Integer, Bitmap> { //asynctask to download the image
         ProgressDialog pDialog;
 
-        protected void onPreExecute() { //creo il messaggio che segnala se l'immagine sta scaricando
+        protected void onPreExecute() { //while the image is loading
             pDialog = new ProgressDialog(ScrollingActivity.this);
             pDialog.setMessage("Download Image ....");
             pDialog.show();
@@ -179,9 +173,9 @@ public class ScrollingActivity extends AppCompatActivity {
 
         protected void onPostExecute(Bitmap img) {
             pDialog.dismiss();
-            ImageView iv = (ImageView) findViewById(R.id.locandina);
+            ImageView iv = (ImageView) findViewById(R.id.Poster);
             if (iv != null && img != null) {
-                iv.setImageBitmap(img); //imposto l'immagine scaricata
+                iv.setImageBitmap(img); //show the downloaded image
             }
         }
     }
